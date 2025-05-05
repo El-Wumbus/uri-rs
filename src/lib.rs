@@ -156,6 +156,9 @@ impl From<Uri<'_>> for UriOwned {
 }
 
 impl UriOwned {
+    fn new(s: &str) -> Result<Self, Error> {
+        Ok(Uri::new(s)?.into())
+    }
     pub fn as_ref(&self) -> Uri {
         self.into()
     }
@@ -225,7 +228,15 @@ mod tests {
         Uri::new(test4).unwrap();
         Uri::new(test5).unwrap();
         Uri::new(test6).unwrap();
-        Uri::new(test7).unwrap();
+
+        UriOwned::new(test7).unwrap();
+        UriOwned::new(test1).unwrap();
+        UriOwned::new(test2).unwrap();
+        UriOwned::new(dbg!(test3)).unwrap();
+        UriOwned::new(test4).unwrap();
+        UriOwned::new(test5).unwrap();
+        UriOwned::new(test6).unwrap();
+        UriOwned::new(test7).unwrap();
         let uri2 = Uri::new(test8).unwrap();
         assert_eq!(
             uri2.path,
