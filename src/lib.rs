@@ -1,9 +1,12 @@
+use std::collections::{HashMap, btree_map::Values};
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("URI failed to validate")]
     Invalid,
 }
 
+pub type QueryParameters = HashMap<String, Option<String>>;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Uri<'a> {
     pub scheme:   Option<&'a str>,
@@ -69,6 +72,32 @@ impl<'a> Uri<'a> {
         }
 
         Ok(uri)
+    }
+
+    /// Get query parameters
+    pub fn get_query_parameters(&self) -> Option<QueryParameters> {
+        let mut map = HashMap::new();
+        for param in self.query?.split('&') {
+            match param.split_once('=') {
+                Some((key, value)) => {
+                    let Some(key) = percent_decode(key) else {
+                        continue;
+                    };
+                    let Some(value) = percent_decode(value) else {
+                        continue;
+                    };
+                    map.insert(key, Some(value));
+                }
+                None => {
+                    let Some(key) = percent_decode(param) else {
+                        continue;
+                    };
+                    map.insert(key, None);
+                }
+            }
+        }
+
+        Some(map)
     }
 }
 impl<'a> TryFrom<&'a str> for Uri<'a> {
@@ -243,8 +272,16 @@ mod tests {
             Some("oasis:names:specification:docbook:dtd:xml:4.1.2")
         );
         Uri::new(test9).unwrap();
-        Uri::new(test10).unwrap();
+        let uri = Uri::new(test10).unwrap();
+        assert_eq!(
+            uri.get_query_parameters().unwrap(),
+            HashMap::from([("v".to_string(), Some("QyjyWUrHsFc".to_string()))])
+        );
         let uri = Uri::new(test11).unwrap();
+        assert_eq!(
+            uri.get_query_parameters().unwrap(),
+            HashMap::from([("query".to_string(), None)])
+        );
         assert_eq!(uri.scheme, Some("https"));
         assert_eq!(uri.userinfo, Some("john.doe"));
         assert_eq!(uri.host, Some("www.example.com"));
