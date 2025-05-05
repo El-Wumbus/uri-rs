@@ -185,7 +185,7 @@ impl From<Uri<'_>> for UriOwned {
 }
 
 impl UriOwned {
-    fn new(s: &str) -> Result<Self, Error> {
+    pub fn new(s: &str) -> Result<Self, Error> {
         Ok(Uri::new(s)?.into())
     }
     pub fn as_ref(&self) -> Uri {
